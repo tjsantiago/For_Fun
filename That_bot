@@ -1,0 +1,55 @@
+### Reddit That_bot
+
+
+import praw
+import re
+import os
+
+reddit = praw.Reddit(client_id = 'myclientid',
+                    client_secret = 'myclientsecret',
+                    user_agent = '<id version (by /u/username)>',
+                    username = 'botsusername', password = 'botpassword')
+                    
+subs = ['AskReddit']
+keyphrase1 = 'This!'
+reply1 = 'That!'
+keyphrase2 = 'Came here to say this'
+reply2 = 'Came here to say that.'
+
+if not os.path.isfile("posts_replied_to.txt"):
+    posts_replied_to = []
+    
+
+else:
+    with open("posts_replied_to.txt", "r") as f:
+        posts_replied_to = f.read()
+        posts_replied_to = posts_replied_to.split("\n")
+        posts_replied_to = list(filter(None, posts_replied_to))
+        
+#get subreddit from list        
+for sub in subs:
+    subreddit = reddit.subreddit(sub)
+    
+    #get first 10 submissions in hot filter of subreddit
+    for submission in subreddit.hot(limit = 10):
+        if submission.id not in posts_replied_to:
+            print(submission.title)
+            count_comments = 0
+            
+            #get a list of comments
+            submission.comments.replace_more(limit = None)
+            for comment in submission.comments.list():
+                count_comments += 1
+                if keyphrase1 in comment.body:
+                    comment.reply(reply1)
+                    print('Replied to a comment')
+                elif keyphrase2 in comment.body:
+                    comment.reply(reply2)
+                    print('Replied to a comment')
+            
+            posts_replied_to.append(submission.id)
+            #print('This submission has {} comments'.format(count_comments))
+            
+with open("posts_replied_to.txt", "w") as f:
+    for post_id in posts_replied_to:
+        f.write(post_id + "\n")
